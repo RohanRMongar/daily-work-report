@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Daily Work Report</title>
+  <title>AIS Daily Work Report</title>
   <link rel="stylesheet" href="app.css" />
 </head>
 <body>
@@ -15,7 +15,6 @@
 
     <div class="card">
       <form id="reportForm" novalidate>
-        <!-- Name + Date -->
         <div class="grid grid-2">
           <label> Name
             <select name="name" id="nameSelect" required>
@@ -23,11 +22,10 @@
             </select>
           </label>
           <label> Date
-            <input class="field" name="date" type="date" required />
+            <input class="field" name="date" id="dateInput" type="date" required />
           </label>
         </div>
 
-        <!-- Activities (multiple) -->
         <div class="section">
           <h2>
             Activities
@@ -36,7 +34,6 @@
           <div class="rows" id="activityRows"></div>
         </div>
 
-        <!-- Actions -->
         <div class="actions">
           <button type="reset" class="btn-outline">Clear</button>
           <button type="submit" class="btn-primary">Submit</button>
