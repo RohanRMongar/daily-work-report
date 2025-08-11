@@ -1,14 +1,7 @@
 /***** CONFIG *****/
 const ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbznS7TY6iUUqqdxnq8bayxmB6P8bZRzml__uAbAONEZk7wcLdCvyGTuVlNZq8aykiBX/exec"; // e.g., https://script.google.com/macros/s/AKfycb.../exec
+  "https://script.google.com/macros/s/AKfycbznS7TY6iUUqqdxnq8bayxmB6P8bZRzml__uAbAONEZk7wcLdCvyGTuVlNZq8aykiBX/exec"; // replace with your current Web App URL
 const TOKEN = "AIS2025WORKREPORT";
-
-document.addEventListener("DOMContentLoaded", () => {
-  const noteEl = document.getElementById("todayNote");
-  if (noteEl) noteEl.textContent = `Local time zone: ${tz}`;
-  const dateInput = document.getElementById("dateInput");
-  // ... rest unchanged
-});
 
 /***** Utilities *****/
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -21,7 +14,10 @@ function ymdLocal(d) {
 
 /***** Page setup *****/
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("todayNote").textContent = `Local time zone: ${tz}`;
+  // Safely set the note if the element exists
+  const noteEl = document.getElementById("todayNote");
+  if (noteEl) noteEl.textContent = `Local time zone: ${tz}`;
+
   const dateInput = document.getElementById("dateInput");
   const todayStr = ymdLocal(new Date());
   dateInput.min = todayStr;
@@ -41,12 +37,12 @@ document.addEventListener("DOMContentLoaded", () => {
 function jsonp(url) {
   return new Promise((resolve) => {
     const cb = "cb_" + Math.random().toString(36).slice(2);
+    const script = document.createElement("script");
     window[cb] = (data) => {
       resolve(data);
       delete window[cb];
       script.remove();
     };
-    const script = document.createElement("script");
     script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
     document.body.appendChild(script);
   });
@@ -143,9 +139,7 @@ function addActivityRow() {
   const container = document.getElementById("activityRows");
   container.appendChild(createRow());
 }
-document
-  .getElementById("addActivity")
-  .addEventListener("click", addActivityRow);
+document.getElementById("addActivity").addEventListener("click", addActivityRow);
 
 /***** Load names + activity tree *****/
 async function loadDropdowns() {
