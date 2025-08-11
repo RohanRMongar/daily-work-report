@@ -3,6 +3,13 @@ const ENDPOINT =
   "https://script.google.com/macros/s/AKfycbznS7TY6iUUqqdxnq8bayxmB6P8bZRzml__uAbAONEZk7wcLdCvyGTuVlNZq8aykiBX/exec"; // e.g., https://script.google.com/macros/s/AKfycb.../exec
 const TOKEN = "AIS2025WORKREPORT";
 
+document.addEventListener("DOMContentLoaded", () => {
+  const noteEl = document.getElementById("todayNote");
+  if (noteEl) noteEl.textContent = `Local time zone: ${tz}`;
+  const dateInput = document.getElementById("dateInput");
+  // ... rest unchanged
+});
+
 /***** Utilities *****/
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 function ymdLocal(d) {
