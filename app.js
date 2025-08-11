@@ -1,6 +1,6 @@
 /***** CONFIG *****/
 const ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbznS7TY6iUUqqdxnq8bayxmB6P8bZRzml__uAbAONEZk7wcLdCvyGTuVlNZq8aykiBX/exec"; // replace with your current Web App URL
+  "https://script.google.com/macros/s/AKfycbznS7TY6iUUqqdxnq8bayxmB6P8bZRzml__uAbAONEZk7wcLdCvyGTuVlNZq8aykiBX/exec"; // e.g., https://script.google.com/macros/s/AKfycb.../exec
 const TOKEN = "AIS2025WORKREPORT";
 
 /***** Utilities *****/
@@ -14,10 +14,7 @@ function ymdLocal(d) {
 
 /***** Page setup *****/
 document.addEventListener("DOMContentLoaded", () => {
-  // Safely set the note if the element exists
-  const noteEl = document.getElementById("todayNote");
-  if (noteEl) noteEl.textContent = `Local time zone: ${tz}`;
-
+  document.getElementById("todayNote").textContent = `Local time zone: ${tz}`;
   const dateInput = document.getElementById("dateInput");
   const todayStr = ymdLocal(new Date());
   dateInput.min = todayStr;
@@ -37,12 +34,12 @@ document.addEventListener("DOMContentLoaded", () => {
 function jsonp(url) {
   return new Promise((resolve) => {
     const cb = "cb_" + Math.random().toString(36).slice(2);
-    const script = document.createElement("script");
     window[cb] = (data) => {
       resolve(data);
       delete window[cb];
       script.remove();
     };
+    const script = document.createElement("script");
     script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
     document.body.appendChild(script);
   });
@@ -79,7 +76,7 @@ function createRow() {
   const actSelect = document.createElement("select");
   actSelect.name = "activity[]";
   actSelect.required = true;
-  fillSelect(actSelect, activities, "Select activity...");
+  fillSelect(actSelect, activities, "Select activity");
   actLabel.appendChild(actSelect);
 
   // Sub-activity (depends on activity)
@@ -88,7 +85,7 @@ function createRow() {
   const subSelect = document.createElement("select");
   subSelect.name = "sub_activity[]";
   subSelect.required = true;
-  fillSelect(subSelect, [], "Select sub-activity...");
+  fillSelect(subSelect, [], "Select sub-activity");
   subLabel.appendChild(subSelect);
 
   // Task (details)
@@ -139,7 +136,9 @@ function addActivityRow() {
   const container = document.getElementById("activityRows");
   container.appendChild(createRow());
 }
-document.getElementById("addActivity").addEventListener("click", addActivityRow);
+document
+  .getElementById("addActivity")
+  .addEventListener("click", addActivityRow);
 
 /***** Load names + activity tree *****/
 async function loadDropdowns() {
