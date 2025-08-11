@@ -6,107 +6,44 @@
   <title>Daily Work Report</title>
   <style>
     :root{
-      --bg: #0b1020;
-      --card: #121a2b;
-      --ink: #e8eefc;
-      --muted: #a9b4cf;
-      --accent: #5aa9ff;
-      --accent-2:#78f0c0;
-      --ring: #2c3b59;
-      --danger:#ff6b6b;
-      --ok:#40c057;
-      --radius: 16px;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --bg:#0b1020; --card:#121a2b; --ink:#e8eefc; --muted:#a9b4cf;
+      --accent:#5aa9ff; --accent-2:#78f0c0; --ring:#2c3b59; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
     }
     @media (prefers-color-scheme: light){
-      :root{
-        --bg:#f6f8ff; --card:#ffffff; --ink:#0b1020; --muted:#4b587a;
-        --ring:#dfe6fb;
-      }
+      :root{ --bg:#f6f8ff; --card:#fff; --ink:#0b1020; --muted:#4b587a; --ring:#dfe6fb; }
     }
     *{box-sizing:border-box}
     body{
-      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      margin:0; font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
       color:var(--ink); background: radial-gradient(1200px 800px at 20% -10%, #1a2540 0%, transparent 50%) , var(--bg);
       min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px;
     }
-    .wrap{
-      width:100%; max-width: 880px;
-    }
-    .title{
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      margin: 0 0 14px;
-    }
-    h1{
-      font-size: clamp(20px, 2.8vw, 34px); line-height:1.15; margin:0;
-      letter-spacing:.2px;
-    }
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)) , var(--card);
-      border: 1px solid var(--ring);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: clamp(16px, 2vw, 28px);
-    }
-    form{
-      display:grid; gap:18px;
-    }
-    .grid{
-      display:grid; gap:14px;
-      grid-template-columns: 1fr;
-    }
-    @media (min-width: 680px){
-      .grid-2{ grid-template-columns: 1fr 1fr; }
-    }
-
-    label{
-      display:grid; gap:8px; font-size: 14px; color: var(--muted);
-    }
+    .wrap{ width:100%; max-width:880px; }
+    .title{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px; }
+    h1{ font-size:clamp(20px, 2.8vw, 34px); line-height:1.15; margin:0; letter-spacing:.2px; }
+    .card{ background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)) , var(--card); border:1px solid var(--ring);
+      border-radius:var(--radius); box-shadow:var(--shadow); padding:clamp(16px, 2vw, 28px); }
+    form{ display:grid; gap:18px; }
+    .grid{ display:grid; gap:14px; grid-template-columns:1fr; }
+    @media (min-width:680px){ .grid-2{ grid-template-columns:1fr 1fr; } }
+    label{ display:grid; gap:8px; font-size:14px; color:var(--muted); }
     .field, select, textarea{
-      width:100%;
-      background: #0d1526;
-      color: var(--ink);
-      border: 1px solid var(--ring);
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 16px; outline: none;
+      width:100%; background:#0d1526; color:var(--ink); border:1px solid var(--ring); border-radius:12px; padding:12px 14px; font-size:16px; outline:none;
     }
-    .field:focus, select:focus, textarea:focus{
-      border-color: var(--accent); box-shadow: 0 0 0 4px rgba(90,169,255,.15);
-      background: #0f1930;
-    }
-    select{ appearance:none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 20px) calc(1em + 4px), calc(100% - 15px) calc(1em + 4px); background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
-    textarea{ min-height: 110px; resize: vertical; }
-    .section{
-      border-top: 1px dashed var(--ring);
-      padding-top: 14px;
-    }
-    .section h2{
-      font-size: 16px; margin:0 0 8px; letter-spacing:.2px;
-      color: var(--ink);
-    }
-
-    .actions{
-      display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; margin-top: 6px;
-    }
-    button{
-      border: none; cursor:pointer; font-weight:600; letter-spacing:.2px;
-      padding: 12px 16px; border-radius: 12px;
-    }
-    .btn-primary{
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      color: #0b1020;
-    }
-    .btn-outline{
-      background: transparent;
-      color: var(--ink);
-      border:1px solid var(--ring);
-    }
-
-    .note{ font-size: 13px; color: var(--muted); }
-    .alert{ padding:12px; border-radius: 12px; border:1px solid var(--ring); }
-    .alert.ok{ border-color: rgba(64,192,87,.4); background: rgba(64,192,87,.08); }
-    .alert.err{ border-color: rgba(255,107,107,.4); background: rgba(255,107,107,.08); }
+    .field:focus, select:focus, textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(90,169,255,.15); background:#0f1930; }
+    select{ appearance:none; background-image:linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+      background-position: calc(100% - 20px) calc(1em + 4px), calc(100% - 15px) calc(1em + 4px); background-size:5px 5px, 5px 5px; background-repeat:no-repeat; }
+    textarea{ min-height:110px; resize:vertical; }
+    .section{ border-top:1px dashed var(--ring); padding-top:14px; }
+    .section h2{ font-size:16px; margin:0 0 8px; letter-spacing:.2px; color:var(--ink); }
+    .actions{ display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; margin-top:6px; }
+    button{ border:none; cursor:pointer; font-weight:600; letter-spacing:.2px; padding:12px 16px; border-radius:12px; }
+    .btn-primary{ background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1020; }
+    .btn-outline{ background:transparent; color:var(--ink); border:1px solid var(--ring); }
+    .note{ font-size:13px; color:var(--muted); }
+    .alert{ padding:12px; border-radius:12px; border:1px solid var(--ring); }
+    .alert.ok{ border-color:rgba(64,192,87,.4); background:rgba(64,192,87,.08); }
+    .alert.err{ border-color:rgba(255,107,107,.4); background:rgba(255,107,107,.08); }
   </style>
 </head>
 <body>
@@ -117,12 +54,10 @@
     </div>
     <div class="card">
       <form id="reportForm" novalidate>
-        <!-- Row 1: Name + Date -->
         <div class="grid grid-2">
           <label> Name
             <select name="name" required>
               <option value="">Select your name…</option>
-              <!-- TODO: Replace with your real list -->
               <option>Rohan Rana Monger</option>
               <option>Shelimith Lepcha</option>
               <option>Tenzin Dema</option>
@@ -130,20 +65,17 @@
               <option>Wangchuk Tamang</option>
             </select>
           </label>
-
           <label> Date
             <input class="field" name="date" type="date" required />
           </label>
         </div>
 
-        <!-- Morning -->
         <div class="section">
           <h2>Morning</h2>
           <div class="grid grid-2">
             <label> Activity
               <select name="morning_activity" required>
                 <option value="">Select activity…</option>
-                <!-- TODO: Replace with your activity list -->
                 <option>Survey – Topographic</option>
                 <option>Data Processing – RTK/CORS</option>
                 <option>Charting – Aerodrome</option>
@@ -157,14 +89,12 @@
           </div>
         </div>
 
-        <!-- Afternoon -->
         <div class="section">
           <h2>Afternoon</h2>
           <div class="grid grid-2">
             <label> Activity
               <select name="afternoon_activity" required>
                 <option value="">Select activity…</option>
-                <!-- TODO: Replace with your activity list -->
                 <option>Survey – Stakeout</option>
                 <option>Data Processing – Baseline</option>
                 <option>Charting – ICAO Type A</option>
@@ -178,7 +108,6 @@
           </div>
         </div>
 
-        <!-- Actions -->
         <div class="actions">
           <button type="reset" class="btn-outline">Clear</button>
           <button type="submit" class="btn-primary">Submit</button>
@@ -189,47 +118,49 @@
     </div>
   </main>
 
-    <script>
-    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzTv4ye6jVsXjyRcbB4ZMa3SuqgxpXW-PJ9E7HXKdLqqJwzSmwurL-3UMcW5OUsQAG8/exec'; // public URL
-    const TOKEN = 'AIS2025WORKREPORT';
-  
-    document.getElementById('reportForm').addEventListener('submit', async (e) => {
+  <script>
+    // ====== CONFIG ======
+    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzTv4ye6jVsXjyRcbB4ZMa3SuqgxpXW-PJ9E7HXKdLqqJwzSmwurL-3UMcW5OUsQAG8/exec'; // Replace with your public URL
+    const TOKEN = 'AIS2025WORKREPORT'; // Must match Apps Script
+
+    // Set helper text + default date
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    document.getElementById('todayNote').textContent = `Local time zone: ${tz}`;
+    document.querySelector('input[name="date"]').valueAsDate = new Date();
+
+    const form = document.getElementById('reportForm');
+    const msg = document.getElementById('msg');
+
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const form = e.target;
-      const msg = document.getElementById('msg');
+      if (!form.reportValidity()) {
+        msg.className = 'alert err';
+        msg.textContent = 'Please fill all required fields.';
+        return;
+      }
+      msg.className = 'note';
       msg.textContent = 'Submitting…';
-  
-      // Build URL-encoded body (this avoids CORS preflight)
+
       const data = new FormData(form);
-      data.append('token', TOKEN); // include token as a normal field
+      data.append('token', TOKEN);
       const body = new URLSearchParams(data);
-  
+
       try {
-        const res = await fetch(ENDPOINT, {
+        await fetch(ENDPOINT, {
           method: 'POST',
-          body, // <-- no headers set; browser sets urlencoded automatically
+          mode: 'no-cors',  // <- avoids CORS enforcement on response
+          body
         });
-  
-        // You’ll still get a response; just read text or json safely
-        const text = await res.text();
-        let json;
-        try { json = JSON.parse(text); } catch { json = { ok: res.ok }; }
-  
-        if (json.ok) {
-          msg.className = 'alert ok';
-          msg.textContent = 'Submitted! Thank you.';
-          form.reset();
-          document.querySelector('input[name="date"]').valueAsDate = new Date();
-        } else {
-          msg.className = 'alert err';
-          msg.textContent = 'Error: ' + (json.error || 'Unknown error');
-        }
+        // Can't read the response in no-cors; assume success if no exception
+        msg.className = 'alert ok';
+        msg.textContent = 'Submitted! Thank you.';
+        form.reset();
+        document.querySelector('input[name="date"]').valueAsDate = new Date();
       } catch (err) {
         msg.className = 'alert err';
         msg.textContent = 'Network error. Please try again.';
       }
     });
   </script>
-
 </body>
 </html>
