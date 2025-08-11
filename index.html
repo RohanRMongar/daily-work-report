@@ -5,19 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Daily Work Report</title>
   <style>
-    :root{
-      --bg:#0b1020; --card:#121a2b; --ink:#e8eefc; --muted:#a9b4cf;
-      --accent:#5aa9ff; --accent-2:#78f0c0; --ring:#2c3b59; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
-    }
-    @media (prefers-color-scheme: light){
-      :root{ --bg:#f6f8ff; --card:#fff; --ink:#0b1020; --muted:#4b587a; --ring:#dfe6fb; }
-    }
+    :root{ --bg:#0b1020; --card:#121a2b; --ink:#e8eefc; --muted:#a9b4cf; --accent:#5aa9ff; --accent-2:#78f0c0; --ring:#2c3b59; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35); }
+    @media (prefers-color-scheme: light){ :root{ --bg:#f6f8ff; --card:#fff; --ink:#0b1020; --muted:#4b587a; --ring:#dfe6fb; } }
     *{box-sizing:border-box}
-    body{
-      margin:0; font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
+    body{ margin:0; font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
       color:var(--ink); background: radial-gradient(1200px 800px at 20% -10%, #1a2540 0%, transparent 50%) , var(--bg);
-      min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px;
-    }
+      min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px; }
     .wrap{ width:100%; max-width:880px; }
     .title{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px; }
     h1{ font-size:clamp(20px, 2.8vw, 34px); line-height:1.15; margin:0; letter-spacing:.2px; }
@@ -27,9 +20,7 @@
     .grid{ display:grid; gap:14px; grid-template-columns:1fr; }
     @media (min-width:680px){ .grid-2{ grid-template-columns:1fr 1fr; } }
     label{ display:grid; gap:8px; font-size:14px; color:var(--muted); }
-    .field, select, textarea{
-      width:100%; background:#0d1526; color:var(--ink); border:1px solid var(--ring); border-radius:12px; padding:12px 14px; font-size:16px; outline:none;
-    }
+    .field, select, textarea{ width:100%; background:#0d1526; color:var(--ink); border:1px solid var(--ring); border-radius:12px; padding:12px 14px; font-size:16px; outline:none; }
     .field:focus, select:focus, textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(90,169,255,.15); background:#0f1930; }
     select{ appearance:none; background-image:linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
       background-position: calc(100% - 20px) calc(1em + 4px), calc(100% - 15px) calc(1em + 4px); background-size:5px 5px, 5px 5px; background-repeat:no-repeat; }
@@ -56,13 +47,8 @@
       <form id="reportForm" novalidate>
         <div class="grid grid-2">
           <label> Name
-            <select name="name" required>
+            <select name="name" id="nameSelect" required>
               <option value="">Select your name…</option>
-              <option>Rohan Rana Monger</option>
-              <option>Shelimith Lepcha</option>
-              <option>Tenzin Dema</option>
-              <option>Tenzin Lhaden</option>
-              <option>Wangchuk Tamang</option>
             </select>
           </label>
           <label> Date
@@ -74,13 +60,8 @@
           <h2>Morning</h2>
           <div class="grid grid-2">
             <label> Activity
-              <select name="morning_activity" required>
+              <select name="morning_activity" id="morningActivity" required>
                 <option value="">Select activity…</option>
-                <option>Survey – Topographic</option>
-                <option>Data Processing – RTK/CORS</option>
-                <option>Charting – Aerodrome</option>
-                <option>Documentation – eAIP</option>
-                <option>Coordination/Meetings</option>
               </select>
             </label>
             <label> Details (what was done)
@@ -93,13 +74,8 @@
           <h2>Afternoon</h2>
           <div class="grid grid-2">
             <label> Activity
-              <select name="afternoon_activity" required>
+              <select name="afternoon_activity" id="afternoonActivity" required>
                 <option value="">Select activity…</option>
-                <option>Survey – Stakeout</option>
-                <option>Data Processing – Baseline</option>
-                <option>Charting – ICAO Type A</option>
-                <option>Documentation – AMDB</option>
-                <option>Coordination/Meetings</option>
               </select>
             </label>
             <label> Details (what was done)
@@ -119,15 +95,56 @@
   </main>
 
   <script>
-    // ====== CONFIG ======
-    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzTv4ye6jVsXjyRcbB4ZMa3SuqgxpXW-PJ9E7HXKdLqqJwzSmwurL-3UMcW5OUsQAG8/exec'; // Replace with your public URL
-    const TOKEN = 'AIS2025WORKREPORT'; // Must match Apps Script
+    // ===== CONFIG =====
+    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzTv4ye6jVsXjyRcbB4ZMa3SuqgxpXW-PJ9E7HXKdLqqJwzSmwurL-3UMcW5OUsQAG8/exec';
+    const TOKEN = 'AIS2025WORKREPORT';
 
-    // Set helper text + default date
+    // helper text + default date
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     document.getElementById('todayNote').textContent = `Local time zone: ${tz}`;
     document.querySelector('input[name="date"]').valueAsDate = new Date();
 
+    // ===== JSONP loader =====
+    function jsonp(url){
+      return new Promise(resolve => {
+        const cb = 'cb_' + Math.random().toString(36).slice(2);
+        window[cb] = (data) => { resolve(data); delete window[cb]; script.remove(); };
+        const script = document.createElement('script');
+        script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
+        document.body.appendChild(script);
+      });
+    }
+
+    function fillSelect(selectEl, items){
+      // Clear all except the first placeholder option
+      for (let i = selectEl.options.length - 1; i >= 1; i--) selectEl.remove(i);
+      // Sort alphabetically (optional)
+      items = Array.from(new Set(items)).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+      for (const v of items){
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        selectEl.appendChild(opt);
+      }
+    }
+
+    async function loadDropdowns(){
+      try {
+        const [names, activities] = await Promise.all([
+          jsonp(`${ENDPOINT}?q=names`),
+          jsonp(`${ENDPOINT}?q=activities`)
+        ]);
+        fillSelect(document.getElementById('nameSelect'), names || []);
+        fillSelect(document.getElementById('morningActivity'), activities || []);
+        fillSelect(document.getElementById('afternoonActivity'), activities || []);
+      } catch (e){
+        // Fail silently; user can still type via fallback if you switch to <input list> pattern
+        console.warn('Failed to load dropdowns', e);
+      }
+    }
+    loadDropdowns();
+
+    // ===== SUBMIT (Option 1: no-cors) =====
     const form = document.getElementById('reportForm');
     const msg = document.getElementById('msg');
 
@@ -146,12 +163,7 @@
       const body = new URLSearchParams(data);
 
       try {
-        await fetch(ENDPOINT, {
-          method: 'POST',
-          mode: 'no-cors',  // <- avoids CORS enforcement on response
-          body
-        });
-        // Can't read the response in no-cors; assume success if no exception
+        await fetch(ENDPOINT, { method: 'POST', mode: 'no-cors', body });
         msg.className = 'alert ok';
         msg.textContent = 'Submitted! Thank you.';
         form.reset();
