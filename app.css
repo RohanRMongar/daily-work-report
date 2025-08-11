@@ -337,10 +337,62 @@ select {
 
 /* Custom arrow for dropdown */
 select {
+  /* size & spacing */
+  padding: 12px 44px 12px 14px; /* extra right space for arrow */
+  font-size: 16px;
+  border-radius: 5px;
+
+  /* reset + base */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: transparent; /* we use the .neo-field surface */
+  border: none;
+  outline: none;
+  color: var(--ink);
+
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239aa6b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
   background-repeat: no-repeat;
   background-position: right 16px center; /* keep inside the shell */
   background-size: 16px 16px;
+
+  /* subtle neo hover */
+  transition: box-shadow 0.2s ease, filter 0.15s ease;
+}
+select:hover {
+  filter: brightness(1.02);
+}
+
+/* Show ONLY the outer neo glow (no inner outline) */
+select:focus {
+  box-shadow: none;
+}
+.neo-field:focus-within {
+  box-shadow: 0 0 0 5px rgba(173, 190, 255, 0.25), var(--inset-1),
+    var(--inset-2);
+  border-radius: var(--radius-md);
+}
+
+/* Hide default arrow in old IE/Edge */
+select::-ms-expand {
+  display: none;
+}
+
+/* When an icon is present in the shell, keep spacing tidy */
+.neo-field.with-icon .icon {
+  margin-right: 6px;
+}
+
+/* ===== Option list (best‑effort; browsers vary) ===== */
+select option {
+  background: var(--surface);
+  color: var(--ink);
+}
+@media (prefers-color-scheme: dark) {
+  select option {
+    background: #0f1730;
+    color: #e8eefc;
+  }
 }
 
 /* Hover effect */
