@@ -4,13 +4,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AIS Daily Work Report</title>
+
+  <!-- Font to match the screenshot vibe -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="app.css" />
 </head>
 <body>
   <main class="wrap">
     <header class="brand">
       <div class="brand-left">
-        <img src="DoAT.png" alt="Logo" class="logo" />
+        <img src="logo.png" alt="Logo" class="logo" />
         <h1>AIS Daily Work Report</h1>
       </div>
       <div class="note" id="todayNote"></div>
@@ -21,14 +25,23 @@
         <!-- Name + Date -->
         <div class="grid grid-2">
           <label> Name
-            <div class="neo-field">
+            <div class="neo-field with-icon">
+              <span class="icon">
+                <!-- user icon -->
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.31 0-8 2-8 4.5V21h16v-2.5C20 16 16.31 14 12 14Z"/></svg>
+              </span>
               <select name="name" id="nameSelect" required>
                 <option value="">Select your name…</option>
               </select>
             </div>
           </label>
+
           <label> Date
-            <div class="neo-field">
+            <div class="neo-field with-icon">
+              <span class="icon">
+                <!-- calendar icon -->
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M7 2h2v2h6V2h2v2h3a1 1 0 0 1 1 1v15a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1h4Zm12 6H5v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1Z"/></svg>
+              </span>
               <input class="field" name="date" id="dateInput" type="date" required />
             </div>
           </label>
@@ -46,7 +59,7 @@
         <!-- Actions -->
         <div class="actions">
           <button type="reset" class="btn btn-ghost">Clear</button>
-          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="submit" class="btn btn-primary">Sign in<!-- Submit --></button>
         </div>
 
         <div id="msg" class="note status"></div>
