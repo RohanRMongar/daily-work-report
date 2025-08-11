@@ -1,10 +1,9 @@
 /***** CONFIG *****/
 const ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbznS7TY6iUUqqdxnq8bayxmB6P8bZRzml__uAbAONEZk7wcLdCvyGTuVlNZq8aykiBX/exec"; // e.g., https://script.google.com/macros/s/AKfycb.../exec
+  "https://script.google.com/macros/s/AKfycbznS7TY6iUUqqdxnq8bayxmB6P8bZRzml__uAbAONEZk7wcLdCvyGTuVlNZq8aykiBX/exec";
 const TOKEN = "AIS2025WORKREPORT";
 
 /***** Utilities *****/
-const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 function ymdLocal(d) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -14,7 +13,6 @@ function ymdLocal(d) {
 
 /***** Page setup *****/
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("todayNote").textContent = `Local time zone: ${tz}`;
   const dateInput = document.getElementById("dateInput");
   const todayStr = ymdLocal(new Date());
   dateInput.min = todayStr;
@@ -46,7 +44,7 @@ function jsonp(url) {
 }
 
 /***** Data caches *****/
-let activityTree = {}; // { Activity: [sub1, sub2, ...] }
+let activityTree = {};
 let activities = [];
 let names = [];
 
@@ -65,30 +63,27 @@ function fillSelect(selectEl, items, placeholderText) {
   }
 }
 
-/***** Dynamic row: Activity -> Sub-activity (dependent) -> Task *****/
+/***** Dynamic row: Activity -> Sub-activity -> Task *****/
 function createRow() {
   const row = document.createElement("div");
   row.className = "row";
 
-  // Activity
   const actLabel = document.createElement("label");
   actLabel.textContent = "Activity";
   const actSelect = document.createElement("select");
   actSelect.name = "activity[]";
   actSelect.required = true;
-  fillSelect(actSelect, activities, "Select activity");
+  fillSelect(actSelect, activities, "Select activity...");
   actLabel.appendChild(actSelect);
 
-  // Sub-activity (depends on activity)
   const subLabel = document.createElement("label");
   subLabel.textContent = "Sub-activity";
   const subSelect = document.createElement("select");
   subSelect.name = "sub_activity[]";
   subSelect.required = true;
-  fillSelect(subSelect, [], "Select sub-activity");
+  fillSelect(subSelect, [], "Select sub-activity...");
   subLabel.appendChild(subSelect);
 
-  // Task (details)
   const taskLabel = document.createElement("label");
   taskLabel.textContent = "Task (what was done)";
   const taskArea = document.createElement("textarea");
@@ -97,7 +92,6 @@ function createRow() {
   taskArea.required = true;
   taskLabel.appendChild(taskArea);
 
-  // Remove button
   const controls = document.createElement("div");
   controls.className = "controls";
   const removeBtn = document.createElement("button");
@@ -116,12 +110,9 @@ function createRow() {
   });
   controls.appendChild(removeBtn);
 
-  // Dependency: load subs when activity changes
   actSelect.addEventListener("change", () => {
     const act = actSelect.value;
-    const subs = (activityTree[act] || [])
-      .slice()
-      .sort((a, b) => a.localeCompare(b));
+    const subs = (activityTree[act] || []).slice().sort((a, b) => a.localeCompare(b));
     fillSelect(subSelect, subs, "Select sub-activity…");
   });
 
@@ -136,9 +127,7 @@ function addActivityRow() {
   const container = document.getElementById("activityRows");
   container.appendChild(createRow());
 }
-document
-  .getElementById("addActivity")
-  .addEventListener("click", addActivityRow);
+document.getElementById("addActivity").addEventListener("click", addActivityRow);
 
 /***** Load names + activity tree *****/
 async function loadDropdowns() {
@@ -148,20 +137,16 @@ async function loadDropdowns() {
 
     const ns = await jsonp(`${ENDPOINT}?q=names`);
     names = ns || [];
-    fillSelect(
-      document.getElementById("nameSelect"),
-      names,
-      "Select your name…"
-    );
+    fillSelect(document.getElementById("nameSelect"), names, "Select your name…");
 
-    addActivityRow(); // initial
+    addActivityRow();
   } catch (e) {
     console.warn("Failed to load dropdowns", e);
     addActivityRow();
   }
 }
 
-/***** Submit (no-cors) with "no past dates" guard *****/
+/***** Submit *****/
 const form = document.getElementById("reportForm");
 const msg = document.getElementById("msg");
 
@@ -171,8 +156,7 @@ form.addEventListener("submit", async (e) => {
   const dateInput = document.getElementById("dateInput");
   if (dateInput.value && dateInput.min && dateInput.value < dateInput.min) {
     msg.className = "alert err";
-    msg.textContent =
-      "Past dates are not allowed. Please select today or a future date.";
+    msg.textContent = "Past dates are not allowed. Please select today or a future date.";
     dateInput.focus();
     return;
   }
@@ -187,7 +171,7 @@ form.addEventListener("submit", async (e) => {
 
   const data = new FormData(form);
   data.append("token", TOKEN);
-  const body = new URLSearchParams(data); // preserves arrays
+  const body = new URLSearchParams(data);
 
   try {
     await fetch(ENDPOINT, { method: "POST", mode: "no-cors", body });
