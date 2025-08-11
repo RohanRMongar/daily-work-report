@@ -76,7 +76,7 @@ function createRow() {
   const actSelect = document.createElement("select");
   actSelect.name = "activity[]";
   actSelect.required = true;
-  fillSelect(actSelect, activities, "Select activity");
+  fillSelect(actSelect, activities, "Select activity...");
   actLabel.appendChild(actSelect);
 
   // Sub-activity (depends on activity)
@@ -85,7 +85,7 @@ function createRow() {
   const subSelect = document.createElement("select");
   subSelect.name = "sub_activity[]";
   subSelect.required = true;
-  fillSelect(subSelect, [], "Select sub-activity");
+  fillSelect(subSelect, [], "Select sub-activity...");
   subLabel.appendChild(subSelect);
 
   // Task (details)
