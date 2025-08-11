@@ -189,48 +189,36 @@
     </div>
   </main>
 
-  <script>
-    // ====== CONFIG ======
-    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzTv4ye6jVsXjyRcbB4ZMa3SuqgxpXW-PJ9E7HXKdLqqJwzSmwurL-3UMcW5OUsQAG8/exec;
-    const TOKEN = 'AIS2025WORKREPORT'; // must match Apps Script TOKEN
-
-    // Today helper
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    document.getElementById('todayNote').textContent = `Local time zone: ${tz}`;
-    document.querySelector('input[name="date"]').valueAsDate = new Date();
-
-    // Submit handler
-    const form = document.getElementById('reportForm');
-    const msg = document.getElementById('msg');
-
-    form.addEventListener('submit', async (e) => {
+    <script>
+    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzTv4ye6jVsXjyRcbB4ZMa3SuqgxpXW-PJ9E7HXKdLqqJwzSmwurL-3UMcW5OUsQAG8/exec'; // public URL
+    const TOKEN = 'AIS2025WORKREPORT';
+  
+    document.getElementById('reportForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      msg.className = 'note';
+      const form = e.target;
+      const msg = document.getElementById('msg');
       msg.textContent = 'Submitting…';
-
-      // Basic validation
-      if (!form.reportValidity()) {
-        msg.className = 'alert err';
-        msg.textContent = 'Please fill all required fields.';
-        return;
-      }
-
-      const payload = Object.fromEntries(new FormData(form).entries());
-      payload.token = TOKEN; // auth
-
+  
+      // Build URL-encoded body (this avoids CORS preflight)
+      const data = new FormData(form);
+      data.append('token', TOKEN); // include token as a normal field
+      const body = new URLSearchParams(data);
+  
       try {
         const res = await fetch(ENDPOINT, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Auth-Token': TOKEN },
-          body: JSON.stringify(payload)
+          body, // <-- no headers set; browser sets urlencoded automatically
         });
-        const json = await res.json();
-
+  
+        // You’ll still get a response; just read text or json safely
+        const text = await res.text();
+        let json;
+        try { json = JSON.parse(text); } catch { json = { ok: res.ok }; }
+  
         if (json.ok) {
           msg.className = 'alert ok';
           msg.textContent = 'Submitted! Thank you.';
           form.reset();
-          // keep date as today after reset:
           document.querySelector('input[name="date"]').valueAsDate = new Date();
         } else {
           msg.className = 'alert err';
@@ -242,5 +230,6 @@
       }
     });
   </script>
+
 </body>
 </html>
