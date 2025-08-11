@@ -8,26 +8,19 @@ function ymdLocal(d){
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
   const day = String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;                 // safe for lexicographic compare
+  return `${y}-${m}-${day}`;
 }
 
 /***** Page setup *****/
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('todayNote').textContent = `Local time zone: ${tz}`;
-
-  // Enforce "no past dates"
   const dateInput = document.getElementById('dateInput');
-  const today = new Date();
-  const todayStr = ymdLocal(today);
-  dateInput.min = todayStr;                 // <-- disable past dates in picker
-  dateInput.value = todayStr;               // default to today
+  const todayStr = ymdLocal(new Date());
+  dateInput.min = todayStr;
+  dateInput.value = todayStr;
 
-  // Refill min/value after reset
   document.getElementById('reportForm').addEventListener('reset', () => {
-    setTimeout(() => {                      // allow default reset first
-      dateInput.min = todayStr;
-      dateInput.value = todayStr;
-    }, 0);
+    setTimeout(() => { dateInput.min = todayStr; dateInput.value = todayStr; }, 0);
   });
 
   loadDropdowns();
@@ -77,7 +70,7 @@ function createRow(){
   fillSelect(actSelect, activities, 'Select activity…');
   actLabel.appendChild(actSelect);
 
-  // Sub-activity
+  // Sub-activity (depends on activity)
   const subLabel = document.createElement('label');
   subLabel.textContent = 'Sub-activity';
   const subSelect = document.createElement('select');
@@ -86,7 +79,7 @@ function createRow(){
   fillSelect(subSelect, [], 'Select sub-activity…');
   subLabel.appendChild(subSelect);
 
-  // Task
+  // Task (details)
   const taskLabel = document.createElement('label');
   taskLabel.textContent = 'Task (what was done)';
   const taskArea = document.createElement('textarea');
@@ -114,7 +107,7 @@ function createRow(){
   });
   controls.appendChild(removeBtn);
 
-  // Dependency: update subs when activity changes
+  // Dependency: load subs when activity changes
   actSelect.addEventListener('change', () => {
     const act = actSelect.value;
     const subs = (activityTree[act] || []).slice().sort((a,b)=>a.localeCompare(b));
@@ -144,31 +137,27 @@ async function loadDropdowns(){
     names = ns || [];
     fillSelect(document.getElementById('nameSelect'), names, 'Select your name…');
 
-    addActivityRow(); // initial row
+    addActivityRow(); // initial
   } catch (e) {
     console.warn('Failed to load dropdowns', e);
     addActivityRow();
   }
 }
 
-/***** Submit (Option 1: no-cors) with "no past dates" guard *****/
+/***** Submit (no-cors) with "no past dates" guard *****/
 const form = document.getElementById('reportForm');
 const msg  = document.getElementById('msg');
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  // Extra guard against past dates even if user hand-edits the field
   const dateInput = document.getElementById('dateInput');
-  const min = dateInput.min;          // yyyy-mm-dd
-  const val = dateInput.value;        // yyyy-mm-dd
-  if (val && min && val < min) {
+  if (dateInput.value && dateInput.min && dateInput.value < dateInput.min) {
     msg.className = 'alert err';
     msg.textContent = 'Past dates are not allowed. Please select today or a future date.';
     dateInput.focus();
     return;
   }
-
   if (!form.reportValidity()) {
     msg.className = 'alert err';
     msg.textContent = 'Please fill all required fields.';
@@ -188,7 +177,6 @@ form.addEventListener('submit', async (e) => {
     msg.textContent = 'Submitted! Thank you.';
     form.reset();
 
-    // Restore date constraints + first activity row after reset
     const todayStr = ymdLocal(new Date());
     dateInput.min = todayStr;
     dateInput.value = todayStr;
