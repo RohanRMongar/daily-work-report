@@ -4,44 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Daily Work Report</title>
-  <style>
-    :root{ --bg:#0b1020; --card:#121a2b; --ink:#e8eefc; --muted:#a9b4cf; --accent:#5aa9ff; --accent-2:#78f0c0; --ring:#2c3b59; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35); }
-    @media (prefers-color-scheme: light){ :root{ --bg:#f6f8ff; --card:#fff; --ink:#0b1020; --muted:#4b587a; --ring:#dfe6fb; } }
-    *{box-sizing:border-box}
-    body{ margin:0; font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
-      color:var(--ink); background: radial-gradient(1200px 800px at 20% -10%, #1a2540 0%, transparent 50%) , var(--bg);
-      min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px; }
-    .wrap{ width:100%; max-width:980px; }
-    .title{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px; }
-    h1{ font-size:clamp(20px, 2.8vw, 34px); line-height:1.15; margin:0; letter-spacing:.2px; }
-    .card{ background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)) , var(--card); border:1px solid var(--ring);
-      border-radius:var(--radius); box-shadow:var(--shadow); padding:clamp(16px, 2vw, 28px); }
-    form{ display:grid; gap:18px; }
-    .grid{ display:grid; gap:14px; grid-template-columns:1fr; }
-    @media (min-width:780px){ .grid-2{ grid-template-columns:1fr 1fr; } .grid-3{ grid-template-columns:1fr 1fr 1fr; } }
-    label{ display:grid; gap:8px; font-size:14px; color:var(--muted); }
-    .field, select, textarea{ width:100%; background:#0d1526; color:var(--ink); border:1px solid var(--ring); border-radius:12px; padding:12px 14px; font-size:16px; outline:none; }
-    .field:focus, select:focus, textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(90,169,255,.15); background:#0f1930; }
-    select{ appearance:none; background-image:linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
-      background-position: calc(100% - 20px) calc(1em + 4px), calc(100% - 15px) calc(1em + 4px); background-size:5px 5px, 5px 5px; background-repeat:no-repeat; }
-    textarea{ min-height:110px; resize:vertical; }
-    .section{ border-top:1px dashed var(--ring); padding-top:14px; }
-    .section h2{ font-size:16px; margin:0 0 8px; letter-spacing:.2px; color:var(--ink); display:flex; align-items:center; gap:10px; justify-content:space-between; }
-    .rows{ display:grid; gap:12px; }
-    .row{ display:grid; gap:10px; grid-template-columns:1fr; padding:12px; border:1px dashed var(--ring); border-radius:12px; background:#0d1526; }
-    @media (min-width:780px){ .row{ grid-template-columns: 1fr 1fr 1fr auto; align-items:start; } }
-    .row .controls{ display:flex; gap:8px; }
-    .small-btn{ border:1px solid var(--ring); background:transparent; color:var(--ink); padding:8px 10px; border-radius:10px; cursor:pointer; }
-    .add-btn{ background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1020; border:none; padding:10px 12px; border-radius:10px; cursor:pointer; }
-    .actions{ display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; margin-top:6px; }
-    button{ font-weight:600; letter-spacing:.2px; }
-    .btn-primary{ background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1020; border:none; padding:12px 16px; border-radius:12px; cursor:pointer; }
-    .btn-outline{ background:transparent; color:var(--ink); border:1px solid var(--ring); padding:12px 16px; border-radius:12px; cursor:pointer; }
-    .note{ font-size:13px; color:var(--muted); }
-    .alert{ padding:12px; border-radius:12px; border:1px solid var(--ring); }
-    .alert.ok{ border-color:rgba(64,192,87,.4); background:rgba(64,192,87,.08); }
-    .alert.err{ border-color:rgba(255,107,107,.4); background:rgba(255,107,107,.08); }
-  </style>
+  <link rel="stylesheet" href="app.css" />
 </head>
 <body>
   <main class="wrap">
@@ -49,6 +12,7 @@
       <h1>Daily Work Report</h1>
       <div class="note" id="todayNote"></div>
     </div>
+
     <div class="card">
       <form id="reportForm" novalidate>
         <!-- Name + Date -->
@@ -83,172 +47,6 @@
     </div>
   </main>
 
-  <script>
-    // ===== CONFIG =====
-    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbznS7TY6iUUqqdxnq8bayxmB6P8bZRzml__uAbAONEZk7wcLdCvyGTuVlNZq8aykiBX/exec'; // e.g., https://script.google.com/macros/s/AKfycb.../exec
-    const TOKEN = 'AIS2025WORKREPORT';
-
-    // helper text + default date
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    document.getElementById('todayNote').textContent = `Local time zone: ${tz}`;
-    document.querySelector('input[name="date"]').valueAsDate = new Date();
-
-    // ===== JSONP helper =====
-    function jsonp(url){
-      return new Promise(resolve => {
-        const cb = 'cb_' + Math.random().toString(36).slice(2);
-        window[cb] = (data) => { resolve(data); delete window[cb]; script.remove(); };
-        const script = document.createElement('script');
-        script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
-        document.body.appendChild(script);
-      });
-    }
-
-    // ===== Data caches =====
-    let activityTree = {};     // { Activity: [sub1, sub2, ...] }
-    let activities   = [];     // ["Electronic AIP (eAIP)", "AMDB", ...]
-    let names        = [];
-
-    // ===== Populate selects =====
-    function fillSelect(selectEl, items, placeholderText){
-      selectEl.innerHTML = '';
-      const ph = document.createElement('option');
-      ph.value = '';
-      ph.textContent = placeholderText || 'Select...';
-      selectEl.appendChild(ph);
-      for (const v of items){
-        const opt = document.createElement('option');
-        opt.value = v;
-        opt.textContent = v;
-        selectEl.appendChild(opt);
-      }
-    }
-
-    // Build a row: Activity -> Sub-activity (dependent) -> Task
-    function createRow(){
-      const row = document.createElement('div');
-      row.className = 'row';
-
-      // Activity
-      const actLabel = document.createElement('label');
-      actLabel.textContent = 'Activity';
-      const actSelect = document.createElement('select');
-      actSelect.name = 'activity[]';
-      actSelect.required = true;
-      fillSelect(actSelect, activities, 'Select activity…');
-      actLabel.appendChild(actSelect);
-
-      // Sub-activity (depends on activity)
-      const subLabel = document.createElement('label');
-      subLabel.textContent = 'Sub-activity';
-      const subSelect = document.createElement('select');
-      subSelect.name = 'sub_activity[]';
-      subSelect.required = true;
-      fillSelect(subSelect, [], 'Select sub-activity…');
-      subLabel.appendChild(subSelect);
-
-      // Task (details)
-      const taskLabel = document.createElement('label');
-      taskLabel.textContent = 'Task (what was done)';
-      const taskArea = document.createElement('textarea');
-      taskArea.name = 'task[]';
-      taskArea.placeholder = 'Describe the task/work done…';
-      taskArea.required = true;
-      taskLabel.appendChild(taskArea);
-
-      // Remove button
-      const controls = document.createElement('div');
-      controls.className = 'controls';
-      const removeBtn = document.createElement('button');
-      removeBtn.type = 'button';
-      removeBtn.className = 'small-btn';
-      removeBtn.textContent = '✕ Remove';
-      removeBtn.addEventListener('click', () => {
-        const container = row.parentElement;
-        if (container.querySelectorAll('.row').length > 1) {
-          row.remove();
-        } else {
-          actSelect.value = '';
-          fillSelect(subSelect, [], 'Select sub-activity…');
-          taskArea.value = '';
-        }
-      });
-      controls.appendChild(removeBtn);
-
-      // Wire dependency: when activity changes, reload subs
-      actSelect.addEventListener('change', () => {
-        const act = actSelect.value;
-        const subs = (activityTree[act] || []).slice().sort((a,b)=>a.localeCompare(b));
-        fillSelect(subSelect, subs, 'Select sub-activity…');
-      });
-
-      row.appendChild(actLabel);
-      row.appendChild(subLabel);
-      row.appendChild(taskLabel);
-      row.appendChild(controls);
-      return row;
-    }
-
-    function addActivityRow(){
-      const container = document.getElementById('activityRows');
-      container.appendChild(createRow());
-    }
-
-    document.getElementById('addActivity').addEventListener('click', addActivityRow);
-
-    // Load Names + ActivityTree
-    async function loadDropdowns(){
-      try {
-        const data = await jsonp(`${ENDPOINT}?q=activityTree`);   // { Activity: [subs] }
-        activityTree = data || {};
-        activities   = Object.keys(activityTree).sort((a,b)=>a.localeCompare(b));
-
-        const ns = await jsonp(`${ENDPOINT}?q=names`);
-        names = ns || [];
-
-        // Fill name select
-        fillSelect(document.getElementById('nameSelect'), names, 'Select your name…');
-
-        // Create initial row
-        addActivityRow();
-      } catch (e) {
-        console.warn('Failed to load dropdowns', e);
-        addActivityRow();
-      }
-    }
-    loadDropdowns();
-
-    // ===== SUBMIT (Option 1: no-cors) =====
-    const form = document.getElementById('reportForm');
-    const msg  = document.getElementById('msg');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!form.reportValidity()) {
-        msg.className = 'alert err';
-        msg.textContent = 'Please fill all required fields.';
-        return;
-      }
-      msg.className = 'note';
-      msg.textContent = 'Submitting…';
-
-      const data = new FormData(form);
-      data.append('token', TOKEN);
-      const body = new URLSearchParams(data); // preserves arrays
-
-      try {
-        await fetch(ENDPOINT, { method: 'POST', mode: 'no-cors', body });
-        msg.className = 'alert ok';
-        msg.textContent = 'Submitted! Thank you.';
-        form.reset();
-        document.querySelector('input[name="date"]').valueAsDate = new Date();
-        document.getElementById('activityRows').innerHTML = '';
-        addActivityRow();
-      } catch (err) {
-        msg.className = 'alert err';
-        msg.textContent = 'Network error. Please try again.';
-      }
-    });
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
