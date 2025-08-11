@@ -333,14 +333,6 @@ select {
   appearance: none;
   outline: none;
   transition: all 0.2s ease;
-}
-
-/* Custom arrow for dropdown */
-select {
-  /* size & spacing */
-  padding: 12px 44px 12px 14px; /* extra right space for arrow */
-  font-size: 16px;
-  border-radius: 5px;
 
   /* reset + base */
   appearance: none;
@@ -359,6 +351,9 @@ select {
   /* subtle neo hover */
   transition: box-shadow 0.2s ease, filter 0.15s ease;
 }
+
+/* Custom arrow for dropdown */
+
 select:hover {
   filter: brightness(1.02);
 }
