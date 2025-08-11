@@ -11,14 +11,14 @@
     body{ margin:0; font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
       color:var(--ink); background: radial-gradient(1200px 800px at 20% -10%, #1a2540 0%, transparent 50%) , var(--bg);
       min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px; }
-    .wrap{ width:100%; max-width:880px; }
+    .wrap{ width:100%; max-width:980px; }
     .title{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px; }
     h1{ font-size:clamp(20px, 2.8vw, 34px); line-height:1.15; margin:0; letter-spacing:.2px; }
     .card{ background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)) , var(--card); border:1px solid var(--ring);
       border-radius:var(--radius); box-shadow:var(--shadow); padding:clamp(16px, 2vw, 28px); }
     form{ display:grid; gap:18px; }
     .grid{ display:grid; gap:14px; grid-template-columns:1fr; }
-    @media (min-width:680px){ .grid-2{ grid-template-columns:1fr 1fr; } }
+    @media (min-width:780px){ .grid-2{ grid-template-columns:1fr 1fr; } .grid-3{ grid-template-columns:1fr 1fr 1fr; } }
     label{ display:grid; gap:8px; font-size:14px; color:var(--muted); }
     .field, select, textarea{ width:100%; background:#0d1526; color:var(--ink); border:1px solid var(--ring); border-radius:12px; padding:12px 14px; font-size:16px; outline:none; }
     .field:focus, select:focus, textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(90,169,255,.15); background:#0f1930; }
@@ -29,7 +29,7 @@
     .section h2{ font-size:16px; margin:0 0 8px; letter-spacing:.2px; color:var(--ink); display:flex; align-items:center; gap:10px; justify-content:space-between; }
     .rows{ display:grid; gap:12px; }
     .row{ display:grid; gap:10px; grid-template-columns:1fr; padding:12px; border:1px dashed var(--ring); border-radius:12px; background:#0d1526; }
-    @media (min-width:680px){ .row{ grid-template-columns: 1fr 1fr auto; align-items:start; } }
+    @media (min-width:780px){ .row{ grid-template-columns: 1fr 1fr 1fr auto; align-items:start; } }
     .row .controls{ display:flex; gap:8px; }
     .small-btn{ border:1px solid var(--ring); background:transparent; color:var(--ink); padding:8px 10px; border-radius:10px; cursor:pointer; }
     .add-btn{ background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1020; border:none; padding:10px 12px; border-radius:10px; cursor:pointer; }
@@ -85,7 +85,7 @@
 
   <script>
     // ===== CONFIG =====
-    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbyxPXyyUgYklhaq3hOOecdnHvny6gNR8YE3nETYPeVo9TRk92V9ON8wTlwprFB-I3_F/exec'; // e.g., https://script.google.com/macros/s/AKfy.../exec
+    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbznS7TY6iUUqqdxnq8bayxmB6P8bZRzml__uAbAONEZk7wcLdCvyGTuVlNZq8aykiBX/exec'; // e.g., https://script.google.com/macros/s/AKfycb.../exec
     const TOKEN = 'AIS2025WORKREPORT';
 
     // helper text + default date
@@ -93,7 +93,7 @@
     document.getElementById('todayNote').textContent = `Local time zone: ${tz}`;
     document.querySelector('input[name="date"]').valueAsDate = new Date();
 
-    // ===== JSONP loader =====
+    // ===== JSONP helper =====
     function jsonp(url){
       return new Promise(resolve => {
         const cb = 'cb_' + Math.random().toString(36).slice(2);
@@ -103,58 +103,58 @@
         document.body.appendChild(script);
       });
     }
-    function fillSelect(selectEl, items){
-      for (let i = selectEl.options.length - 1; i >= 1; i--) selectEl.remove(i);
-      items = Array.from(new Set(items)).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+
+    // ===== Data caches =====
+    let activityTree = {};     // { Activity: [sub1, sub2, ...] }
+    let activities   = [];     // ["Electronic AIP (eAIP)", "AMDB", ...]
+    let names        = [];
+
+    // ===== Populate selects =====
+    function fillSelect(selectEl, items, placeholderText){
+      selectEl.innerHTML = '';
+      const ph = document.createElement('option');
+      ph.value = '';
+      ph.textContent = placeholderText || 'Select...';
+      selectEl.appendChild(ph);
       for (const v of items){
         const opt = document.createElement('option');
-        opt.value = v; opt.textContent = v;
+        opt.value = v;
+        opt.textContent = v;
         selectEl.appendChild(opt);
       }
     }
 
-    let activitiesCache = [];
-    async function loadDropdowns(){
-      try {
-        const [names, activities] = await Promise.all([
-          jsonp(`${ENDPOINT}?q=names`),
-          jsonp(`${ENDPOINT}?q=activities`)
-        ]);
-        fillSelect(document.getElementById('nameSelect'), names || []);
-        activitiesCache = activities || [];
-        addActivityRow(); // initial row
-      } catch (e){ console.warn('Failed to load dropdowns', e); addActivityRow(); }
-    }
-
-    // ===== Dynamic activity rows =====
+    // Build a row: Activity -> Sub-activity (dependent) -> Task
     function createRow(){
       const row = document.createElement('div');
       row.className = 'row';
 
-      // Activity select
-      const activityLabel = document.createElement('label');
-      activityLabel.textContent = 'Activity';
-      const activitySelect = document.createElement('select');
-      activitySelect.name = 'activity[]';
-      activitySelect.required = true;
-      const placeholder = document.createElement('option');
-      placeholder.value = ''; placeholder.textContent = 'Select activity…';
-      activitySelect.appendChild(placeholder);
-      for (const v of Array.from(new Set(activitiesCache)).filter(Boolean).sort((a,b)=>a.localeCompare(b))){
-        const opt = document.createElement('option');
-        opt.value = v; opt.textContent = v;
-        activitySelect.appendChild(opt);
-      }
-      activityLabel.appendChild(activitySelect);
+      // Activity
+      const actLabel = document.createElement('label');
+      actLabel.textContent = 'Activity';
+      const actSelect = document.createElement('select');
+      actSelect.name = 'activity[]';
+      actSelect.required = true;
+      fillSelect(actSelect, activities, 'Select activity…');
+      actLabel.appendChild(actSelect);
 
-      // Sub-activity (details)
+      // Sub-activity (depends on activity)
       const subLabel = document.createElement('label');
-      subLabel.textContent = 'Sub-activity (details)';
-      const subInput = document.createElement('textarea');
-      subInput.name = 'sub_activity[]';      // maps to "sub-activity" column on the backend
-      subInput.placeholder = 'Describe the task/work done…';
-      subInput.required = true;
-      subLabel.appendChild(subInput);
+      subLabel.textContent = 'Sub-activity';
+      const subSelect = document.createElement('select');
+      subSelect.name = 'sub_activity[]';
+      subSelect.required = true;
+      fillSelect(subSelect, [], 'Select sub-activity…');
+      subLabel.appendChild(subSelect);
+
+      // Task (details)
+      const taskLabel = document.createElement('label');
+      taskLabel.textContent = 'Task (what was done)';
+      const taskArea = document.createElement('textarea');
+      taskArea.name = 'task[]';
+      taskArea.placeholder = 'Describe the task/work done…';
+      taskArea.required = true;
+      taskLabel.appendChild(taskArea);
 
       // Remove button
       const controls = document.createElement('div');
@@ -168,16 +168,24 @@
         if (container.querySelectorAll('.row').length > 1) {
           row.remove();
         } else {
-          activitySelect.value = '';
-          subInput.value = '';
+          actSelect.value = '';
+          fillSelect(subSelect, [], 'Select sub-activity…');
+          taskArea.value = '';
         }
       });
       controls.appendChild(removeBtn);
 
-      row.appendChild(activityLabel);
-      row.appendChild(subLabel);
-      row.appendChild(controls);
+      // Wire dependency: when activity changes, reload subs
+      actSelect.addEventListener('change', () => {
+        const act = actSelect.value;
+        const subs = (activityTree[act] || []).slice().sort((a,b)=>a.localeCompare(b));
+        fillSelect(subSelect, subs, 'Select sub-activity…');
+      });
 
+      row.appendChild(actLabel);
+      row.appendChild(subLabel);
+      row.appendChild(taskLabel);
+      row.appendChild(controls);
       return row;
     }
 
@@ -187,11 +195,32 @@
     }
 
     document.getElementById('addActivity').addEventListener('click', addActivityRow);
+
+    // Load Names + ActivityTree
+    async function loadDropdowns(){
+      try {
+        const data = await jsonp(`${ENDPOINT}?q=activityTree`);   // { Activity: [subs] }
+        activityTree = data || {};
+        activities   = Object.keys(activityTree).sort((a,b)=>a.localeCompare(b));
+
+        const ns = await jsonp(`${ENDPOINT}?q=names`);
+        names = ns || [];
+
+        // Fill name select
+        fillSelect(document.getElementById('nameSelect'), names, 'Select your name…');
+
+        // Create initial row
+        addActivityRow();
+      } catch (e) {
+        console.warn('Failed to load dropdowns', e);
+        addActivityRow();
+      }
+    }
     loadDropdowns();
 
     // ===== SUBMIT (Option 1: no-cors) =====
     const form = document.getElementById('reportForm');
-    const msg = document.getElementById('msg');
+    const msg  = document.getElementById('msg');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -205,9 +234,7 @@
 
       const data = new FormData(form);
       data.append('token', TOKEN);
-
-      // Important: URLSearchParams preserves multiple values as activity[]=.. repeated
-      const body = new URLSearchParams(data);
+      const body = new URLSearchParams(data); // preserves arrays
 
       try {
         await fetch(ENDPOINT, { method: 'POST', mode: 'no-cors', body });
