@@ -26,11 +26,17 @@
       background-position: calc(100% - 20px) calc(1em + 4px), calc(100% - 15px) calc(1em + 4px); background-size:5px 5px, 5px 5px; background-repeat:no-repeat; }
     textarea{ min-height:110px; resize:vertical; }
     .section{ border-top:1px dashed var(--ring); padding-top:14px; }
-    .section h2{ font-size:16px; margin:0 0 8px; letter-spacing:.2px; color:var(--ink); }
+    .section h2{ font-size:16px; margin:0 0 8px; letter-spacing:.2px; color:var(--ink); display:flex; align-items:center; gap:10px; justify-content:space-between; }
+    .rows{ display:grid; gap:12px; }
+    .row{ display:grid; gap:10px; grid-template-columns:1fr; padding:12px; border:1px dashed var(--ring); border-radius:12px; background:#0d1526; }
+    @media (min-width:680px){ .row{ grid-template-columns: 1fr 1fr auto; align-items:start; } }
+    .row .controls{ display:flex; gap:8px; }
+    .small-btn{ border:1px solid var(--ring); background:transparent; color:var(--ink); padding:8px 10px; border-radius:10px; cursor:pointer; }
+    .add-btn{ background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1020; border:none; padding:10px 12px; border-radius:10px; cursor:pointer; }
     .actions{ display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; margin-top:6px; }
-    button{ border:none; cursor:pointer; font-weight:600; letter-spacing:.2px; padding:12px 16px; border-radius:12px; }
-    .btn-primary{ background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1020; }
-    .btn-outline{ background:transparent; color:var(--ink); border:1px solid var(--ring); }
+    button{ font-weight:600; letter-spacing:.2px; }
+    .btn-primary{ background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1020; border:none; padding:12px 16px; border-radius:12px; cursor:pointer; }
+    .btn-outline{ background:transparent; color:var(--ink); border:1px solid var(--ring); padding:12px 16px; border-radius:12px; cursor:pointer; }
     .note{ font-size:13px; color:var(--muted); }
     .alert{ padding:12px; border-radius:12px; border:1px solid var(--ring); }
     .alert.ok{ border-color:rgba(64,192,87,.4); background:rgba(64,192,87,.08); }
@@ -45,6 +51,7 @@
     </div>
     <div class="card">
       <form id="reportForm" novalidate>
+        <!-- Name + Date -->
         <div class="grid grid-2">
           <label> Name
             <select name="name" id="nameSelect" required>
@@ -56,34 +63,25 @@
           </label>
         </div>
 
+        <!-- Morning -->
         <div class="section">
-          <h2>Morning</h2>
-          <div class="grid grid-2">
-            <label> Activity
-              <select name="morning_activity" id="morningActivity" required>
-                <option value="">Select activity…</option>
-              </select>
-            </label>
-            <label> Details (what was done)
-              <textarea name="morning_text" placeholder="Describe your morning work…" required></textarea>
-            </label>
-          </div>
+          <h2>
+            Morning
+            <button type="button" class="add-btn" id="addMorning">+ Add activity</button>
+          </h2>
+          <div class="rows" id="morningRows"></div>
         </div>
 
+        <!-- Afternoon -->
         <div class="section">
-          <h2>Afternoon</h2>
-          <div class="grid grid-2">
-            <label> Activity
-              <select name="afternoon_activity" id="afternoonActivity" required>
-                <option value="">Select activity…</option>
-              </select>
-            </label>
-            <label> Details (what was done)
-              <textarea name="afternoon_text" placeholder="Describe your afternoon work…" required></textarea>
-            </label>
-          </div>
+          <h2>
+            Afternoon
+            <button type="button" class="add-btn" id="addAfternoon">+ Add activity</button>
+          </h2>
+          <div class="rows" id="afternoonRows"></div>
         </div>
 
+        <!-- Actions -->
         <div class="actions">
           <button type="reset" class="btn-outline">Clear</button>
           <button type="submit" class="btn-primary">Submit</button>
@@ -96,7 +94,7 @@
 
   <script>
     // ===== CONFIG =====
-    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzTv4ye6jVsXjyRcbB4ZMa3SuqgxpXW-PJ9E7HXKdLqqJwzSmwurL-3UMcW5OUsQAG8/exec';
+    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzTv4ye6jVsXjyRcbB4ZMa3SuqgxpXW-PJ9E7HXKdLqqJwzSmwurL-3UMcW5OUsQAG8/exec';  // e.g., https://script.google.com/macros/s/AKfy.../exec
     const TOKEN = 'AIS2025WORKREPORT';
 
     // helper text + default date
@@ -114,20 +112,17 @@
         document.body.appendChild(script);
       });
     }
-
     function fillSelect(selectEl, items){
-      // Clear all except the first placeholder option
       for (let i = selectEl.options.length - 1; i >= 1; i--) selectEl.remove(i);
-      // Sort alphabetically (optional)
       items = Array.from(new Set(items)).filter(Boolean).sort((a,b)=>a.localeCompare(b));
       for (const v of items){
         const opt = document.createElement('option');
-        opt.value = v;
-        opt.textContent = v;
+        opt.value = v; opt.textContent = v;
         selectEl.appendChild(opt);
       }
     }
 
+    let activitiesCache = [];
     async function loadDropdowns(){
       try {
         const [names, activities] = await Promise.all([
@@ -135,13 +130,81 @@
           jsonp(`${ENDPOINT}?q=activities`)
         ]);
         fillSelect(document.getElementById('nameSelect'), names || []);
-        fillSelect(document.getElementById('morningActivity'), activities || []);
-        fillSelect(document.getElementById('afternoonActivity'), activities || []);
-      } catch (e){
-        // Fail silently; user can still type via fallback if you switch to <input list> pattern
-        console.warn('Failed to load dropdowns', e);
-      }
+        activitiesCache = activities || [];
+        // create an initial row for morning and afternoon
+        addRow('morningRows');
+        addRow('afternoonRows');
+      } catch (e){ console.warn('Failed to load dropdowns', e); }
     }
+
+    // ===== Dynamic Rows =====
+    function createActivityRow(sectionKey){
+      const row = document.createElement('div');
+      row.className = 'row';
+
+      // activity select
+      const activityLabel = document.createElement('label');
+      activityLabel.textContent = 'Activity';
+      const activitySelect = document.createElement('select');
+      activitySelect.name = sectionKey + '_activity[]';
+      activitySelect.required = true;
+      const placeholder = document.createElement('option');
+      placeholder.value = ''; placeholder.textContent = 'Select activity…';
+      activitySelect.appendChild(placeholder);
+      // populate with cached activities
+      for (const v of Array.from(new Set(activitiesCache)).filter(Boolean).sort((a,b)=>a.localeCompare(b))){
+        const opt = document.createElement('option');
+        opt.value = v; opt.textContent = v;
+        activitySelect.appendChild(opt);
+      }
+      activityLabel.appendChild(activitySelect);
+
+      // details textarea
+      const textLabel = document.createElement('label');
+      textLabel.textContent = 'Details (what was done)';
+      const textArea = document.createElement('textarea');
+      textArea.name = sectionKey + '_text[]';
+      textArea.placeholder = `Describe your ${sectionKey} work…`;
+      textArea.required = true;
+      textLabel.appendChild(textArea);
+
+      // remove button
+      const controls = document.createElement('div');
+      controls.className = 'controls';
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'small-btn';
+      removeBtn.textContent = '✕ Remove';
+      removeBtn.addEventListener('click', () => {
+        const container = row.parentElement;
+        // keep at least one row
+        if (container.querySelectorAll('.row').length > 1) {
+          row.remove();
+        } else {
+          // if last row, just clear it
+          activitySelect.value = '';
+          textArea.value = '';
+        }
+      });
+      controls.appendChild(removeBtn);
+
+      // layout: [select] [textarea] [controls]
+      row.appendChild(activityLabel);
+      row.appendChild(textLabel);
+      row.appendChild(controls);
+
+      return row;
+    }
+
+    function addRow(containerId){
+      const container = document.getElementById(containerId);
+      const sectionKey = containerId.startsWith('morning') ? 'morning' : 'afternoon';
+      container.appendChild(createActivityRow(sectionKey));
+    }
+
+    document.getElementById('addMorning').addEventListener('click', () => addRow('morningRows'));
+    document.getElementById('addAfternoon').addEventListener('click', () => addRow('afternoonRows'));
+
     loadDropdowns();
 
     // ===== SUBMIT (Option 1: no-cors) =====
@@ -168,6 +231,10 @@
         msg.textContent = 'Submitted! Thank you.';
         form.reset();
         document.querySelector('input[name="date"]').valueAsDate = new Date();
+        // re-create first rows so form isn't empty after reset
+        document.getElementById('morningRows').innerHTML = '';
+        document.getElementById('afternoonRows').innerHTML = '';
+        addRow('morningRows'); addRow('afternoonRows');
       } catch (err) {
         msg.className = 'alert err';
         msg.textContent = 'Network error. Please try again.';
