@@ -1,6 +1,6 @@
 /***** CONFIG *****/
 const ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbznS7TY6iUUqqdxnq8bayxmB6P8bZRzml__uAbAONEZk7wcLdCvyGTuVlNZq8aykiBX/exec";
+  "https://script.google.com/macros/s/AKfycbw9AcXW5d9clj6qkkTVs7cPG0qIRmJNGltR0etGe_kQHRIhSxfThpJPBgQ1yeOvPwSO/exec";
 const TOKEN = "AIS2025WORKREPORT";
 
 /***** Utilities *****/
