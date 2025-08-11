@@ -2,11 +2,34 @@
 const ENDPOINT = 'https://script.google.com/macros/s/AKfycbznS7TY6iUUqqdxnq8bayxmB6P8bZRzml__uAbAONEZk7wcLdCvyGTuVlNZq8aykiBX/exec'; // e.g., https://script.google.com/macros/s/AKfycb.../exec
 const TOKEN    = 'AIS2025WORKREPORT';
 
-/***** Page setup *****/
+/***** Utilities *****/
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+function ymdLocal(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;                 // safe for lexicographic compare
+}
+
+/***** Page setup *****/
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('todayNote').textContent = `Local time zone: ${tz}`;
-  document.querySelector('input[name="date"]').valueAsDate = new Date();
+
+  // Enforce "no past dates"
+  const dateInput = document.getElementById('dateInput');
+  const today = new Date();
+  const todayStr = ymdLocal(today);
+  dateInput.min = todayStr;                 // <-- disable past dates in picker
+  dateInput.value = todayStr;               // default to today
+
+  // Refill min/value after reset
+  document.getElementById('reportForm').addEventListener('reset', () => {
+    setTimeout(() => {                      // allow default reset first
+      dateInput.min = todayStr;
+      dateInput.value = todayStr;
+    }, 0);
+  });
+
   loadDropdowns();
 });
 
@@ -23,7 +46,7 @@ function jsonp(url){
 
 /***** Data caches *****/
 let activityTree = {};  // { Activity: [sub1, sub2, ...] }
-let activities   = [];  // ["Electronic AIP (eAIP)", "AMDB", ...]
+let activities   = [];
 let names        = [];
 
 /***** Populate helper *****/
@@ -54,7 +77,7 @@ function createRow(){
   fillSelect(actSelect, activities, 'Select activity…');
   actLabel.appendChild(actSelect);
 
-  // Sub-activity (depends on activity)
+  // Sub-activity
   const subLabel = document.createElement('label');
   subLabel.textContent = 'Sub-activity';
   const subSelect = document.createElement('select');
@@ -63,7 +86,7 @@ function createRow(){
   fillSelect(subSelect, [], 'Select sub-activity…');
   subLabel.appendChild(subSelect);
 
-  // Task (details)
+  // Task
   const taskLabel = document.createElement('label');
   taskLabel.textContent = 'Task (what was done)';
   const taskArea = document.createElement('textarea');
@@ -117,7 +140,8 @@ async function loadDropdowns(){
     activityTree = await jsonp(`${ENDPOINT}?q=activityTree`) || {};
     activities = Object.keys(activityTree).sort((a,b)=>a.localeCompare(b));
 
-    names = await jsonp(`${ENDPOINT}?q=names`) || [];
+    const ns = await jsonp(`${ENDPOINT}?q=names`);
+    names = ns || [];
     fillSelect(document.getElementById('nameSelect'), names, 'Select your name…');
 
     addActivityRow(); // initial row
@@ -127,17 +151,30 @@ async function loadDropdowns(){
   }
 }
 
-/***** Submit (Option 1: no-cors) *****/
+/***** Submit (Option 1: no-cors) with "no past dates" guard *****/
 const form = document.getElementById('reportForm');
 const msg  = document.getElementById('msg');
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+
+  // Extra guard against past dates even if user hand-edits the field
+  const dateInput = document.getElementById('dateInput');
+  const min = dateInput.min;          // yyyy-mm-dd
+  const val = dateInput.value;        // yyyy-mm-dd
+  if (val && min && val < min) {
+    msg.className = 'alert err';
+    msg.textContent = 'Past dates are not allowed. Please select today or a future date.';
+    dateInput.focus();
+    return;
+  }
+
   if (!form.reportValidity()) {
     msg.className = 'alert err';
     msg.textContent = 'Please fill all required fields.';
     return;
   }
+
   msg.className = 'note';
   msg.textContent = 'Submitting…';
 
@@ -150,7 +187,12 @@ form.addEventListener('submit', async (e) => {
     msg.className = 'alert ok';
     msg.textContent = 'Submitted! Thank you.';
     form.reset();
-    document.querySelector('input[name="date"]').valueAsDate = new Date();
+
+    // Restore date constraints + first activity row after reset
+    const todayStr = ymdLocal(new Date());
+    dateInput.min = todayStr;
+    dateInput.value = todayStr;
+
     document.getElementById('activityRows').innerHTML = '';
     addActivityRow();
   } catch (err) {
