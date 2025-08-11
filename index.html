@@ -63,22 +63,13 @@
           </label>
         </div>
 
-        <!-- Morning -->
+        <!-- Activities (multiple) -->
         <div class="section">
           <h2>
-            Morning
-            <button type="button" class="add-btn" id="addMorning">+ Add activity</button>
+            Activities
+            <button type="button" class="add-btn" id="addActivity">+ Add activity</button>
           </h2>
-          <div class="rows" id="morningRows"></div>
-        </div>
-
-        <!-- Afternoon -->
-        <div class="section">
-          <h2>
-            Afternoon
-            <button type="button" class="add-btn" id="addAfternoon">+ Add activity</button>
-          </h2>
-          <div class="rows" id="afternoonRows"></div>
+          <div class="rows" id="activityRows"></div>
         </div>
 
         <!-- Actions -->
@@ -94,7 +85,7 @@
 
   <script>
     // ===== CONFIG =====
-    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzTv4ye6jVsXjyRcbB4ZMa3SuqgxpXW-PJ9E7HXKdLqqJwzSmwurL-3UMcW5OUsQAG8/exec';  // e.g., https://script.google.com/macros/s/AKfy.../exec
+    const ENDPOINT = 'https://script.google.com/macros/s/AKfycby-G30uQjK3DylYtn_pbFKtuP10bYff6yBESrWhqhFcan0yYtqDFx1SPzDQDY3zGY8Y/exec'; // e.g., https://script.google.com/macros/s/AKfy.../exec
     const TOKEN = 'AIS2025WORKREPORT';
 
     // helper text + default date
@@ -131,27 +122,24 @@
         ]);
         fillSelect(document.getElementById('nameSelect'), names || []);
         activitiesCache = activities || [];
-        // create an initial row for morning and afternoon
-        addRow('morningRows');
-        addRow('afternoonRows');
-      } catch (e){ console.warn('Failed to load dropdowns', e); }
+        addActivityRow(); // initial row
+      } catch (e){ console.warn('Failed to load dropdowns', e); addActivityRow(); }
     }
 
-    // ===== Dynamic Rows =====
-    function createActivityRow(sectionKey){
+    // ===== Dynamic activity rows =====
+    function createRow(){
       const row = document.createElement('div');
       row.className = 'row';
 
-      // activity select
+      // Activity select
       const activityLabel = document.createElement('label');
       activityLabel.textContent = 'Activity';
       const activitySelect = document.createElement('select');
-      activitySelect.name = sectionKey + '_activity[]';
+      activitySelect.name = 'activity[]';
       activitySelect.required = true;
       const placeholder = document.createElement('option');
       placeholder.value = ''; placeholder.textContent = 'Select activity…';
       activitySelect.appendChild(placeholder);
-      // populate with cached activities
       for (const v of Array.from(new Set(activitiesCache)).filter(Boolean).sort((a,b)=>a.localeCompare(b))){
         const opt = document.createElement('option');
         opt.value = v; opt.textContent = v;
@@ -159,16 +147,16 @@
       }
       activityLabel.appendChild(activitySelect);
 
-      // details textarea
-      const textLabel = document.createElement('label');
-      textLabel.textContent = 'Details (what was done)';
-      const textArea = document.createElement('textarea');
-      textArea.name = sectionKey + '_text[]';
-      textArea.placeholder = `Describe your ${sectionKey} work…`;
-      textArea.required = true;
-      textLabel.appendChild(textArea);
+      // Sub-activity (details)
+      const subLabel = document.createElement('label');
+      subLabel.textContent = 'Sub-activity (details)';
+      const subInput = document.createElement('textarea');
+      subInput.name = 'sub_activity[]';      // maps to "sub-activity" column on the backend
+      subInput.placeholder = 'Describe the task/work done…';
+      subInput.required = true;
+      subLabel.appendChild(subInput);
 
-      // remove button
+      // Remove button
       const controls = document.createElement('div');
       controls.className = 'controls';
       const removeBtn = document.createElement('button');
@@ -177,34 +165,28 @@
       removeBtn.textContent = '✕ Remove';
       removeBtn.addEventListener('click', () => {
         const container = row.parentElement;
-        // keep at least one row
         if (container.querySelectorAll('.row').length > 1) {
           row.remove();
         } else {
-          // if last row, just clear it
           activitySelect.value = '';
-          textArea.value = '';
+          subInput.value = '';
         }
       });
       controls.appendChild(removeBtn);
 
-      // layout: [select] [textarea] [controls]
       row.appendChild(activityLabel);
-      row.appendChild(textLabel);
+      row.appendChild(subLabel);
       row.appendChild(controls);
 
       return row;
     }
 
-    function addRow(containerId){
-      const container = document.getElementById(containerId);
-      const sectionKey = containerId.startsWith('morning') ? 'morning' : 'afternoon';
-      container.appendChild(createActivityRow(sectionKey));
+    function addActivityRow(){
+      const container = document.getElementById('activityRows');
+      container.appendChild(createRow());
     }
 
-    document.getElementById('addMorning').addEventListener('click', () => addRow('morningRows'));
-    document.getElementById('addAfternoon').addEventListener('click', () => addRow('afternoonRows'));
-
+    document.getElementById('addActivity').addEventListener('click', addActivityRow);
     loadDropdowns();
 
     // ===== SUBMIT (Option 1: no-cors) =====
@@ -223,6 +205,8 @@
 
       const data = new FormData(form);
       data.append('token', TOKEN);
+
+      // Important: URLSearchParams preserves multiple values as activity[]=.. repeated
       const body = new URLSearchParams(data);
 
       try {
@@ -231,10 +215,8 @@
         msg.textContent = 'Submitted! Thank you.';
         form.reset();
         document.querySelector('input[name="date"]').valueAsDate = new Date();
-        // re-create first rows so form isn't empty after reset
-        document.getElementById('morningRows').innerHTML = '';
-        document.getElementById('afternoonRows').innerHTML = '';
-        addRow('morningRows'); addRow('afternoonRows');
+        document.getElementById('activityRows').innerHTML = '';
+        addActivityRow();
       } catch (err) {
         msg.className = 'alert err';
         msg.textContent = 'Network error. Please try again.';
