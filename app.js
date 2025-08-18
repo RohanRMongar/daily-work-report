@@ -1,6 +1,6 @@
 /***** CONFIG *****/
 const ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbzX6JHnmE8UjJSJae2sbNxTjAJlembBpWUv7urYzspoIhN142Y8eX2cglxDLwL_GJPi/exec";
+  "https://script.google.com/macros/s/AKfycbx3-dmLAuVBL0s224tAS3fYra1k1GnMSs5Wr0HHMkCug4ligqHW_x0UkmbYTO0n7O6q/exec";
 const TOKEN = "AIS2025WORKREPORT";
 
 /***** Utilities *****/
@@ -147,39 +147,22 @@ async function loadDropdowns() {
 }
 
 /***** Submit *****/
-/***** Submit (idempotent; no duplicates even on double-click) *****/
 const form = document.getElementById("reportForm");
 const msg = document.getElementById("msg");
-const submitBtn = form.querySelector('button[type="submit"]');
-let submitting = false;
-
-function makeSID() {
-  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
-  return 'sid-' + Date.now() + '-' + Math.random().toString(36).slice(2);
-}
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  // guard: ignore re-entrancy
-  if (submitting) return;
-  submitting = true;
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.style.pointerEvents = 'none'; }
 
   const dateInput = document.getElementById("dateInput");
   if (dateInput.value && dateInput.min && dateInput.value < dateInput.min) {
     msg.className = "alert err";
     msg.textContent = "Past dates are not allowed. Please select today or a future date.";
-    submitting = false;
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.style.pointerEvents = ''; }
     dateInput.focus();
     return;
   }
   if (!form.reportValidity()) {
     msg.className = "alert err";
     msg.textContent = "Please fill all required fields.";
-    submitting = false;
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.style.pointerEvents = ''; }
     return;
   }
 
@@ -188,28 +171,22 @@ form.addEventListener("submit", async (e) => {
 
   const data = new FormData(form);
   data.append("token", TOKEN);
-  data.append("sid", makeSID());     // unique id for backend dedupe
-  const body = new URLSearchParams(data); // simple request -> stays CORS-safe
+  const body = new URLSearchParams(data);
 
   try {
-    // With no-cors the response is opaque; that's fine (and where CORB logs come from)
     await fetch(ENDPOINT, { method: "POST", mode: "no-cors", body });
     msg.className = "alert ok";
     msg.textContent = "Submitted! Thank you.";
     form.reset();
 
-    // restore today + one fresh activity row
     const todayStr = ymdLocal(new Date());
-    const dateInput = document.getElementById("dateInput");
     dateInput.min = todayStr;
     dateInput.value = todayStr;
+
     document.getElementById("activityRows").innerHTML = "";
     addActivityRow();
   } catch (err) {
     msg.className = "alert err";
     msg.textContent = "Network error. Please try again.";
-  } finally {
-    submitting = false;
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.style.pointerEvents = ''; }
   }
 });
