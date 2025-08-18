@@ -146,42 +146,23 @@ async function loadDropdowns() {
   }
 }
 
-/***** Submit (no-cors) with idempotency *****/
+/***** Submit *****/
 const form = document.getElementById("reportForm");
 const msg = document.getElementById("msg");
-const submitBtn = form.querySelector('button[type="submit"]');
-let submitting = false;
-
-function makeSID() {
-  // stable unique id for this submission
-  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
-  return 'sid-' + Date.now() + '-' + Math.random().toString(36).slice(2);
-}
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  if (submitting) return;            // already in-flight
-  submitting = true;
-  submitBtn.disabled = true;
-  submitBtn.style.pointerEvents = 'none';
 
   const dateInput = document.getElementById("dateInput");
   if (dateInput.value && dateInput.min && dateInput.value < dateInput.min) {
     msg.className = "alert err";
     msg.textContent = "Past dates are not allowed. Please select today or a future date.";
-    submitting = false;
-    submitBtn.disabled = false;
-    submitBtn.style.pointerEvents = '';
     dateInput.focus();
     return;
   }
   if (!form.reportValidity()) {
     msg.className = "alert err";
     msg.textContent = "Please fill all required fields.";
-    submitting = false;
-    submitBtn.disabled = false;
-    submitBtn.style.pointerEvents = '';
     return;
   }
 
@@ -190,7 +171,6 @@ form.addEventListener("submit", async (e) => {
 
   const data = new FormData(form);
   data.append("token", TOKEN);
-  data.append("sid", makeSID());     // <— add unique id for backend dedupe
   const body = new URLSearchParams(data);
 
   try {
@@ -208,10 +188,5 @@ form.addEventListener("submit", async (e) => {
   } catch (err) {
     msg.className = "alert err";
     msg.textContent = "Network error. Please try again.";
-  } finally {
-    // allow a new submission later
-    submitting = false;
-    submitBtn.disabled = false;
-    submitBtn.style.pointerEvents = '';
   }
 });
