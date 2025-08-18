@@ -1,6 +1,6 @@
 /***** CONFIG *****/
 const ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbyknk8dKK4X7aYs3feLxU1GDZDO0wSWlz7ZgbTH7oKBcOnFBft27kC_B-CyyBQSyhjf/exec";
+  "https://script.google.com/macros/s/AKfycbzX6JHnmE8UjJSJae2sbNxTjAJlembBpWUv7urYzspoIhN142Y8eX2cglxDLwL_GJPi/exec";
 const TOKEN = "AIS2025WORKREPORT";
 
 /***** Utilities *****/
@@ -147,7 +147,7 @@ async function loadDropdowns() {
 }
 
 /***** Submit *****/
-/***** Submit (idempotent) *****/
+/***** Submit (idempotent; no duplicates even on double-click) *****/
 const form = document.getElementById("reportForm");
 const msg = document.getElementById("msg");
 const submitBtn = form.querySelector('button[type="submit"]');
@@ -161,7 +161,8 @@ function makeSID() {
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  if (submitting) return; // already in-flight
+  // guard: ignore re-entrancy
+  if (submitting) return;
   submitting = true;
   if (submitBtn) { submitBtn.disabled = true; submitBtn.style.pointerEvents = 'none'; }
 
@@ -187,19 +188,21 @@ form.addEventListener("submit", async (e) => {
 
   const data = new FormData(form);
   data.append("token", TOKEN);
-  data.append("sid", makeSID()); // <— send unique id per submission
-  const body = new URLSearchParams(data);
+  data.append("sid", makeSID());     // unique id for backend dedupe
+  const body = new URLSearchParams(data); // simple request -> stays CORS-safe
 
   try {
+    // With no-cors the response is opaque; that's fine (and where CORB logs come from)
     await fetch(ENDPOINT, { method: "POST", mode: "no-cors", body });
     msg.className = "alert ok";
     msg.textContent = "Submitted! Thank you.";
     form.reset();
 
+    // restore today + one fresh activity row
     const todayStr = ymdLocal(new Date());
+    const dateInput = document.getElementById("dateInput");
     dateInput.min = todayStr;
     dateInput.value = todayStr;
-
     document.getElementById("activityRows").innerHTML = "";
     addActivityRow();
   } catch (err) {
